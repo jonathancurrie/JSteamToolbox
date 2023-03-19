@@ -42,7 +42,7 @@ i = 1;
 rInd{:,:,i} = strfind(genp,'vti_cnf'); i = i + 1;
 rInd{:,:,i} = strfind(genp,'vti_pvt'); i = i + 1;
 rInd{:,:,i} = strfind(genp,'Source'); i = i + 1;
-rInd{:,:,i} = strfind(genp,'My Tests'); i = i + 1;
+rInd{:,:,i} = strfind(genp,'Internal Tests'); i = i + 1;
 rInd{:,:,i} = strfind(genp,'fluids'); i = i + 1;
 rInd{:,:,i} = strfind(genp,'.git'); i = i + 1;
 ind = NaN(length(rInd{1}),1);

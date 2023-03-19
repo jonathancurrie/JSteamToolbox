@@ -3,9 +3,13 @@ function current_version = JSteamver
 %  Return JSteam software version. This document also contains version
 %  update information.
 
-current_version = 1.73;
+current_version = 1.74;
 
 %History 
+
+% v1.74 (19/03/2023)
+% - Rebuilt against JSteam v3.26
+% - Updated for Control Engineering
 
 % v1.73 (01/02/2017)
 % - Rebuilt against JSteam v3.22
