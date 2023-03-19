@@ -1,7 +1,7 @@
 ### NOTICE: JSteam Toolbox is no longer under development and thus no further updates are expected.
 
 # JSteam Toolbox
-If you are interested in (fast) Thermodynamics, use MATLAB and like free stuff, JSteam Toolbox could be for you. See the [JSteam Wiki](https://www.controlengineering.co.nz/Wikis/JSteam/pmwiki.php/Matlab/Main) for details on thermodynamics and modelling heat and power systems using MATLAB!
+If you are interested in (fast) Thermodynamics and Utility System Modelling, use MATLAB and like free stuff, JSteam Toolbox could be for you. See the [JSteam Wiki](https://www.controlengineering.co.nz/Wikis/JSteam/pmwiki.php/Matlab/Main) for details on thermodynamics and modelling heat and power systems using MATLAB!
 
 #### Downloading JSteam Toolbox
 The best way to get JSteam Toolbox is to clone the master branch from GitHub (this page!) using git. I like [GitKraken](https://www.gitkraken.com/) which makes it easy to use git without the command line. Once you have git/GitKraken/some other git client, simply click **Clone or download** (above, green button) and copy the address of this repository, and clone it to your computer. This way each time I push updates to the master branch, you can simply pull them down without having to redownload the entire JSteam Toolbox again! 
