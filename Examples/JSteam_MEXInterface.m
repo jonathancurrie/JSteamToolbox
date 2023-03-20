@@ -12,16 +12,83 @@ JSteamMEX('Load')
 clc
 JSteamMEX('help')
 
-%% Steam Thermodynamics [IAPWS-97]
+%% Water/Steam Thermodynamics [IAPWS-97]
 % - Use the first argument to specify the function you would like to call
 clc
-H = JSteamMEX('HPT',1,100)
-S = JSteamMEX('SPT',1,100)
+% Forward Functions
+H = JSteamMEX('HPT',1,100)      % Specific Enthalpy
+S = JSteamMEX('SPT',1,100)      % Specific Entropy 
+Cp = JSteamMEX('CpPT',1,100)    % Isobaric Heat Capacity
+Cv = JSteamMEX('CvPT',1,100)    % Isochroic Heat Capacity
+V = JSteamMEX('VPT',1,100)      % Volume
+
+% Reverse Functions
+P = JSteamMEX('PHS',H,S)        % Pressure
+T = JSteamMEX('THS',H,S)        % Temperature
 
 % - The MEX interface is parallelized as well
 p = 1;
 t = linspace(100,500,10)';
-Hv = JSteamMEX('HPT',p,t)
+Hv1 = JSteamMEX('HPT',p,t)
+
+p = linspace(1,10,10)';
+t = linspace(100,500,10)';
+[P,T] = meshgrid(p,t);
+Hv2 = JSteamMEX('HPT',P,T)
+
+%% Water/Steam Thermodynamics with REFPROP
+clc
+H = JSteamMEX('HcPT','water',1,100) % Specific Enthalpy of Steam
+S = JSteamMEX('ScPT','water',1,100) % Specific Entropy of Steam
+
+P = JSteamMEX('PcHS','water',H,S)   % Reverse Pressure
+T = JSteamMEX('TcHS','water',H,S)   % Reverse Temperature
+
+%% Vapour-Liquid Sat Curve
+clc
+% Set Example Units
+JSteamMEX('SetUnit','Temperature','C')
+JSteamMEX('SetUnit','Pressure','kPa')
+
+% Compute Vapour Pressure (Saturated Pressure) across this temp range
+t = 10:10:180;
+Psat = JSteamMEX('PSatT',t)
+
+% Plot a nice curve
+plot(t,Psat,'.-'); grid on;
+xlabel('T_{sat} [^{\circ}C]')
+ylabel('P_{sat} [kPa]')
+title('Vapour-Liquid Saturation Curve of Water')
+
+% Return to default units
+JSteamMEX('SetDefaultUnits')
+
+%% Compute Enthalpy of Vaporization (Latent Heat of Vaporization)
+clc
+
+% Reference Pressure
+P = JSteamMEX('ConvUnit',1,'atm','bar'); % 1atm in bar
+
+% Determine Enthalpy of Saturated Vapour (X=1) at 1 atm
+HsatV = JSteamMEX('HPX',P,1)
+X = JSteamMEX('XPH',P,HsatV) % check quality
+TsatV = JSteamMEX('TPH',P,HsatV)
+
+% Determine Enthalpy of Saturated Liquid (X=0) at 1 atm
+HsatL = JSteamMEX('HPX',P,0)
+X = JSteamMEX('XPH',P,HsatL) % check
+TsatL = JSteamMEX('TPH',P,HsatL)
+
+% Determine Enthalpy of Vaporization
+HVap = HsatV - HsatL
+
+% IAPWS 97 Temperature Error
+tempError = TsatV-TsatL % should be 0
+
+%% Water/Steam Transport Properties
+clc
+K = JSteamMEX('KPT',1,100) % Thermal Conductivity of Steam [mW/(m.K)]
+U = JSteamMEX('UPT',1,100) % Viscosity of Steam [uPa.s]
 
 
 %% General Fluid Thermodynamics [REFPROP] 
@@ -60,11 +127,11 @@ clc
 
 %% Combustion Unit Operations [REFPROP] 
 clc
-%Fuel
+% Fuel
 fluids = {'methane','hydrogen','nitrogen','water','hydrogensulfide'};
 fracs = [0.95,0.01,0.02,0.01,0.01];
 Fuel = [fluids(:) num2cell(fracs(:))];
-%Operating Specs
+% Operating Specs
 fuelT = 30;
 airT = 30;
 airP = 1.01325;
@@ -73,7 +140,7 @@ minStackT = 1000;
 O2 = 0.1;
 O2Mode = 0;
 fuelM = 1;
-%Solve Unit
+% Solve Unit
 [status,airM,Duty,FEff,acidDp,Stack] = JSteamMEX('UnitOp_FurnaceM',Fuel,fuelT,airT,airP,airRelHum,minStackT,O2,O2Mode,fuelM)
 
 %% Refrigerant Unit Operations [REFPROP]
