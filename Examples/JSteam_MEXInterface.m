@@ -1,7 +1,4 @@
 %% JSteamMEX Examples
-% It is optional to use the JSteam class, and is in fact 2-3x faster to use 
-% the MEX interface directly. The downside is slightly more obtuse code.
-
 clc
 clear all
 format compact
