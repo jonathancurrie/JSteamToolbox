@@ -1,7 +1,7 @@
 /* -------------- JSteam Utility Modelling Package --------------- */
 /*                  Main JSteam Class Header File                  */
 /*                                                                 */
-/*             Copyright © 2010-2015 Jonathan Currie               */
+/*             Copyright ï¿½ 2010-2015 Jonathan Currie               */
 /* --------------------------------------------------------------- */
 
 #pragma once
@@ -291,7 +291,7 @@ namespace JSteamDLL
 		DLL double CpPS(double P, double S);
 		DLL double CpPX(double P, double X);
 		DLL double CpTX(double T, double X);
-		//-- Isochroic Heat Capacity--//
+		//-- Isochoric Heat Capacity--//
 		DLL double CvPT(double P, double T);
 		DLL double CvPH(double P, double H);
 		DLL double CvPS(double P, double S);
@@ -422,7 +422,7 @@ namespace JSteamDLL
 		DLL double CpcPH(Component C, double P, double H);
 		DLL double CpcPX(Component C, double P, double X);
 		DLL double CpcTX(Component C, double T, double X);
-		//--Isochroic Heat Capacity--//
+		//--Isochoric Heat Capacity--//
 		DLL double CvcPT(Component C, double P, double T);
 		DLL double CvcPS(Component C, double P, double S);
 		DLL double CvcPH(Component C, double P, double H);
