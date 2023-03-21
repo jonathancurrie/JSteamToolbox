@@ -284,6 +284,19 @@ namespace JSteamMEX
             mxFree(func);
             return 0;            
         }
+        else if(strcmpi(func,"TYPNATGAS") || strcmpi(func,"TYPICALNATURALGAS"))
+        {
+            //Ensure JSteam is Loaded
+            loadJSteam(true);
+            //Create Mixture
+            Mixture natgas;
+            natgas.SetAsTypNatGas();
+            //Create output cell array with mixture
+            mixToCell(natgas,&plhs[0]);
+            //Clean up
+            mxFree(func);
+            return 0;            
+        }
         else if(strcmpi(func,"ONEATM"))
         {
             plhs[0] = mxCreateDoubleScalar(JSteamUnits::OneAtm());

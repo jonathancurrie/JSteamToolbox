@@ -121,3 +121,107 @@ shell.outX = JSteamMEX('XPH',shell.outP,shell.outH); % Check Phase
 duty
 shell
 tube
+
+%% Fired Steam Boiler (BoilerFired)
+clc
+
+% Inputs
+BFWT = 25;   % Inlet Boiler Feed Water Temperature [C]
+BFWP = 5;    % Inlet Boiler Feed Water Pressure [bar]
+BFWH = JSteamMEX('HPT',BFWP,BFWT); % Inlet Boiler Feed Water Enthalpy [kJ/kg]
+
+StmM = 5;    % Outlet Steam Mass Flow Rate [tonne/h]
+StmT = 410;  % Outlet Steam Temperature [C]
+StmP = 42;   % Outlet Steam Pressure [bar]
+
+BDr  = 0.01; % Blowdown Ratio [fraction]
+
+fuel = JSteamMEX('TypNatGas'); % Typical Natural Gas mixture
+fuelT = -20; % Fuel Temperature [C]
+airT = 30;   % Air Temperature [C]
+airP = JSteamMEX('OneAtm'); % Air Pressure [bar]
+airRelHum = 0.5; % Air Relative Humidity [fraction]
+
+minStackT = 200; % Minimum Stack Temperature [C]
+O2   = 0.01;     % Minimum Stack O2 Mole Fraction
+O2Mode = 1;      % 0 Inlet Spec, 1 Outlet Spec
+
+[status,StmH,BFWM,airM,fuelM,FEff,Duty,Stack] = JSteamMEX('UnitOp_BoilerFired',BFWH,StmM,StmT,StmP,BDr,fuel,fuelT,airT,airP,airRelHum,minStackT,O2,O2Mode)
+
+%% Gas Turbine with Steam Injection coupled to HRSG with Supplemental Firing
+clc
+
+% Gas Turbine Inputs
+fuel  = {'Methane',0.9;'Ethane',0.08;'Propane',0.02};   % Fuel Mixture Mole Fractions
+fuelT = -20;     % Fuel Temperature [C]
+airT  = 30;      % Air Temperature [C]
+airP  = 1.01325; % Air Pressure [bar]
+airRelHum = 0.5; % Air Relative Humidity [fraction]
+
+exhaustT = 300;  % GTG Exhaust Temperature [C]
+presRatio = 20;  % Ratio of inlet to outlet compressure pressure
+compEff  = 0.75; % Compressor Isentropic Efficiency [fraction]
+
+StmT = 410;      % Injected Steam Temperature [C]
+StmP = 42;       % Injected Steam Pressure [bar]
+StmM = 1;        % Injected Steam Mass Flow Rate [tonne/hr]
+
+GTPower = 15000; % GTG Output Power [kW]
+GTEff = 0.3;     % GTG Overall Mechanical+Electrical Efficiency [fraction]
+
+% Solve Gas Turbine
+[status,airM,fuelM,exhaustM,Exhaust] = JSteamMEX('UnitOp_GasTurbineInj',fuel,fuelT,airT,airP,airRelHum,exhaustT,presRatio,compEff,StmT,StmP,StmM,GTPower,GTEff)
+
+% HRSG Inputs
+secFuel    = fuel;  % Assume same fuel for both units
+secFuelT   = fuelT;
+OpMode     = 1;     % 0 Base Load Only, 1 Meet Demand, 2 Maximum Firing
+
+minAppT    = 30;    % Minimum internal delta-T [C]
+minStackT  = 200;   % Minimum stack temperature [C]
+minStackO2 = 0.01;  % Minimum stack O2 mole fraction
+
+StmDemand  = 50;    % Steam Demand [tonne/hr]
+StmT       = 410;   % Steam Temperature [C]
+StmP       = 42;    % Steam Pressure [bar]
+BFWH       = 350;   % Boiler Feed Water Enthalpy [kJ/kg]
+BDr        = 0.01;  % Blowdown Ratio
+
+[status,StmM,BaseStmM,MaxStmM,SecFuelM,econDT,sprHDT,stackT,stackM,Stack] = JSteamMEX('UnitOp_HRSGSup',Exhaust,secFuel,OpMode,exhaustT,exhaustM,secFuelT,minAppT,minStackT,minStackO2,StmDemand,BFWH,StmT,StmP,BDr)
+
+
+%% ORC Evaporator
+clc
+clear
+% Follows: https://www.controlengineering.co.nz/Wikis/JSteam/pmwiki.php/Excel/TutorialOEC1
+% Set Example Units
+JSteamMEX('SetUnit','Pressure','MPa');
+JSteamMEX('SetUnit','MassFlow','kg/s');
+
+% Brine Specs
+brine = {'water',1};    % Assume just water
+brineInP  = 0.84;       % Brine input pressure [MPa]
+brineInT  = 166.9;      % Brine input temperature [C]
+brineInH  = JSteamMEX('HmPT',brine,brineInP,brineInT); % Inlet Enthalpy [kJ/kg]
+brineInM  = 398.4/2;    % Brine input mass flow rate [kg/s] (50% each side)
+brineOutT = 136.0;      % Brine outlet temperature [C]
+
+% Working Fluid Specs
+fluid = {'nPentane',1}; % 100% n-Pentane
+fluidInP  = 1.64;       % Fluid input pressure [MPa]
+fluidInT  = 61.1;       % Fluid input temperature [C]
+fluidInH  = JSteamMEX('HmPT',fluid,fluidInP,fluidInT); % Inlet Enthalpy [kJ/kg]
+fluidOutT = 147.78;     % Fluid outlet temperature [C]
+fluidOutP = 1.53;       % Fluid outlet pressure [MPa]
+
+% Solve Cooler (Brine, have T+M, solve H+Q):
+brineOutP = brineInP;   % Assume no pressure drop
+brineOutM = brineInM;   % Assume no mass loss
+[status,brineOutH,Duty] = JSteamMEX('UnitOp_CoolerTMC',brine,brineInH,brineOutP,brineOutT,brineOutM)
+
+% Solve Heater (Working Fluid, have T+Q, solve H+M):
+[status,outH,outM] = JSteamMEX('UnitOp_HeaterTQC',fluid,fluidInH,fluidOutP,fluidOutT,Duty)
+
+% Return to default units
+JSteamMEX('SetDefaultUnits');
+
