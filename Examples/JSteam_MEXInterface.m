@@ -176,11 +176,52 @@ gasMixMassFrac = JSteamMEX('mole2mass',gasMixMoleFrac)
 % Back to Mole Fractions (just to check)
 gasMixMoleFrac_check = JSteamMEX('mass2mole',gasMixMassFrac)
 
+%% Vapour-Liquid Sat Curve of Mixture
+clc
+% Set Example Units
+JSteamMEX('SetUnit','Temperature','C')
+JSteamMEX('SetUnit','Pressure','kPa')
+
+% Compute Vapour Pressure (Saturated Pressure) from -50C to Critical Temp
+gasMix = {'nButane',0.5;'nPentane',0.5};
+[Tc,Pc,Vc,TTrip] = JSteamMEX('Info',gasMix) %<- Important! Generates Splines for Mixture
+
+t = linspace(-50,Tc,100);
+Psat = JSteamMEX('PSatmT',gasMix,t)
+
+% Plot a nice curve
+plot(t,Psat,'.-'); grid on;
+xlabel('T_{sat} [^{\circ}C]')
+ylabel('P_{sat} [kPa]')
+title('Vapour-Liquid Saturation Curve of 50/50 nButane/nPentane Mixture')
+
+% Return to default units
+JSteamMEX('SetDefaultUnits')
+
 %% Mixture Transport Properties [REFPROP] 
 clc
 gasMix = {'nButane',0.5;'nPentane',0.5};
 K = JSteamMEX('KmPT',gasMix,10,100) % Thermal Conductivity of Mixture [mW/(m.K)]
 U = JSteamMEX('UmPT',gasMix,10,100) % Viscosity of Mixture [uPa.s]
+
+%% Other Properties [REFPROP]
+clc
+gasMix = {'nButane',0.5;'nPentane',0.5};
+NHV = JSteamMEX('NHV',gasMix)    % Net (Lower) Heating Value
+GHV = JSteamMEX('GHV',gasMix)    % Gross (Higher) Heating Value
+MW = JSteamMEX('MW',gasMix)      % Molecular Weight
+
+%% Mixture Info [REFPROP]
+clc
+% Temperature, Pressure, Volume of Critical Point (Tc, Pc, Vc)
+% Temperature of the Triple Point (TTrip)
+% Normal Boiling Temperature (TNBpt)
+% Acentric Factor (w)
+% Temperature Validity Range (Tmin -> TMax)
+% Maximum Valid Density (DMax)
+% Maximum Valid Pressure (PMax)
+[Tc,Pc,Vc,TTrip,TNBpt,w,TMax,TMin,DMax,PMax] = JSteamMEX('Info',gasMix)
+
 
 %% Steam Unit Operations [IAPWS-97]
 clc
@@ -251,18 +292,6 @@ JSteamMEX('ConvUnit',10,'kg/s','kg/hr')
 % New Basis
 JSteamMEX('ConvUnit',350,'kJ/kg','cal(th)/lbmol',18)
 
-
-%% Pure Fluid Info
-clc
-[Tc,Pc,Vc,TTrip,TNBpt,w,TMax,TMin,DMax,PMax] = JSteamMEX('Info','Water')
-
-
-%% Mixture Info
-clc
-fluids = {'nButane','nPentane'};
-fracs = [0.5,0.5];
-Fluid = [fluids(:) num2cell(fracs(:))];
-[Tc,Pc,Vc,TTrip,TNBpt,w,TMax,TMin,DMax,PMax] = JSteamMEX('Info',Fluid)
 
 %% TS Diagram (beta testing)
 clc
