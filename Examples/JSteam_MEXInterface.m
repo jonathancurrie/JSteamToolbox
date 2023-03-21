@@ -1,7 +1,6 @@
 %% JSteamMEX Examples
 clc
 clear all
-format compact
 %Load JSteam Interface 
 JSteamMEX('Load')
 
@@ -19,8 +18,8 @@ clc
 H = JSteamMEX('HPT',1,100)      % Specific Enthalpy
 S = JSteamMEX('SPT',1,100)      % Specific Entropy 
 Cp = JSteamMEX('CpPT',1,100)    % Isobaric Heat Capacity
-Cv = JSteamMEX('CvPT',1,100)    % Isochroic Heat Capacity
-V = JSteamMEX('VPT',1,100)      % Volume
+Cv = JSteamMEX('CvPT',1,100)    % Isochoric Heat Capacity
+V = JSteamMEX('VPT',1,100)      % Specific Volume
 
 % Reverse Functions
 P = JSteamMEX('PHS',H,S)        % Pressure
@@ -44,7 +43,7 @@ S = JSteamMEX('ScPT','water',1,100) % Specific Entropy of Steam
 P = JSteamMEX('PcHS','water',H,S)   % Reverse Pressure
 T = JSteamMEX('TcHS','water',H,S)   % Reverse Temperature
 
-%% Vapour-Liquid Sat Curve
+%% Vapour-Liquid Sat Curve of Water
 clc
 % Set Example Units
 JSteamMEX('SetUnit','Temperature','C')
@@ -90,20 +89,60 @@ clc
 K = JSteamMEX('KPT',1,100) % Thermal Conductivity of Steam [mW/(m.K)]
 U = JSteamMEX('UPT',1,100) % Viscosity of Steam [uPa.s]
 
-
-%% General Fluid Thermodynamics [REFPROP] 
-% - Use the second argument to specify which component
-clc
-H2 = JSteamMEX('HcPT','Methane',10,100)
-S2 = JSteamMEX('ScPT','Methane',10,100)
-NHV = JSteamMEX('NHV','Methane')
-
-
 %% See Fluids Available
 % - The interface will recognise short or full name, or chemical formula
 clc
 JSteamMEX('PrintFluids')
 
+%% Pure Fluid Thermodynamics [REFPROP] 
+% - Use the second argument to specify which component
+clc
+H = JSteamMEX('HcPT','Methane',10,100)      % Specific Enthalpy
+S = JSteamMEX('ScPT','Methane',10,100)      % Specific Entropy
+Cp = JSteamMEX('CpcPT','Methane',10,100)    % Isobaric Heat Capacity
+Cv = JSteamMEX('CvcPT','Methane',10,100)    % Isochoric Heat Capacity
+V = JSteamMEX('VcPT','Methane',10,100)      % Specific Volume
+
+%% Vapour-Liquid Sat Curve of Oxygen
+clc
+% Set Example Units
+JSteamMEX('SetUnit','Temperature','C')
+JSteamMEX('SetUnit','Pressure','kPa')
+
+% Compute Vapour Pressure (Saturated Pressure) across this temp range
+t = linspace(-210,-120,100);
+Psat = JSteamMEX('PSatcT','Oxygen',t)
+
+% Plot a nice curve
+plot(t,Psat,'.-'); grid on;
+xlabel('T_{sat} [^{\circ}C]')
+ylabel('P_{sat} [kPa]')
+title('Vapour-Liquid Saturation Curve of Oxygen')
+
+% Return to default units
+JSteamMEX('SetDefaultUnits')
+
+%% Pure Fluid Transport Properties [REFPROP] 
+clc
+K = JSteamMEX('KcPT','Methane',10,100) % Thermal Conductivity of Methane [mW/(m.K)]
+U = JSteamMEX('UcPT','Methane',10,100) % Viscosity of Methane [uPa.s]
+
+%% Other Properties [REFPROP]
+clc
+NHV = JSteamMEX('NHV','Methane')    % Net (Lower) Heating Value
+GHV = JSteamMEX('GHV','Methane')    % Gross (Higher) Heating Value
+MW = JSteamMEX('MW','Methane')      % Molecular Weight
+
+%% Fluid Info [REFPROP]
+clc
+% Temperature, Pressure, Volume of Critical Point (Tc, Pc, Vc)
+% Temperature of the Triple Point (TTrip)
+% Normal Boiling Temperature (TNBpt)
+% Acentric Factor (w)
+% Temperature Validity Range (Tmin -> TMax)
+% Maximum Valid Density (DMax)
+% Maximum Valid Pressure (PMax)
+[Tc,Pc,Vc,TTrip,TNBpt,w,TMax,TMin,DMax,PMax] = JSteamMEX('Info','Methane')
 
 %% Mixture Thermodynamics [REFPROP] 
 % - Use the second argument to specify the mixture as a cell array [mole fractions]
@@ -112,12 +151,36 @@ JSteamMEX('PrintFluids')
 %
 % Mixture fractions are always normalized (internally to sum to 1).
 clc
-H3 = JSteamMEX('HmPT',{'nButane',0.5;'nPentane',0.5},10,100)
-%OR
-fluids = {'nButane','nPentane'}; %clearer for larger mixtures
-fracs = [0.5;0.5];
-H4 = JSteamMEX('HmPT',[fluids(:),num2cell(fracs(:))],10,100)
+gasMix = {'nButane',0.5;'nPentane',0.5};
+H  = JSteamMEX('HmPT',gasMix,10,100)    % Specific Enthalpy
+S  = JSteamMEX('SmPT',gasMix,10,100)    % Specific Entropy
+Cp = JSteamMEX('CpmPT',gasMix,10,100)   % Isobaric Heat Capacity
+Cv = JSteamMEX('CvmPT',gasMix,10,100)   % Isochoric Heat Capacity
+V  = JSteamMEX('VmPT',gasMix,10,100)    % Specific Volume
 
+%OR
+fluids  = {'nButane','nPentane'}; %clearer for larger mixtures
+fracs   = [0.5;0.5];
+gasMix2 = [fluids(:),num2cell(fracs(:))];
+H = JSteamMEX('HmPT',gasMix2,10,100)
+%etc
+
+%% Converting between Mass and Mole Fractions
+clc
+% Mole Fractions
+gasMixMoleFrac = {'nButane',0.5;'nPentane',0.5}
+
+% Compute Mass Fractions
+gasMixMassFrac = JSteamMEX('mole2mass',gasMixMoleFrac)
+
+% Back to Mole Fractions (just to check)
+gasMixMoleFrac_check = JSteamMEX('mass2mole',gasMixMassFrac)
+
+%% Mixture Transport Properties [REFPROP] 
+clc
+gasMix = {'nButane',0.5;'nPentane',0.5};
+K = JSteamMEX('KmPT',gasMix,10,100) % Thermal Conductivity of Mixture [mW/(m.K)]
+U = JSteamMEX('UmPT',gasMix,10,100) % Viscosity of Mixture [uPa.s]
 
 %% Steam Unit Operations [IAPWS-97]
 clc
