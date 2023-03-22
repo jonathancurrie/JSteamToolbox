@@ -181,4 +181,108 @@ expressions = U.exprsn
 bounds = U.bnds
 vartypes = U.vartypes
 
-%% 
+%% Optimization Example
+% Steam Boiler connected to Steam Turbo Generator & Back Pressure Turbine
+clc
+
+% Mass Var Naming:
+% m1 = Boiler Out -> HP Header In
+% m2 = HP Header Out -> Turbo Gen In
+% m3 = HP Header Out -> BPT In
+% m4 = Boiler In
+% m5 = HP Header Vent
+% Enthalpy Var Naming:
+% h1 = Boiler Out Enthalpy
+% h2 = HP Header Enthalpy
+
+% Load SymUtility & Add 
+U = SymUtility;
+U.AddSteamGroups(); % Allows Results(U)
+
+% Mass Balance Equations
+U.AddCon('m1-m2-m3-m5 = 0'); %HP Header
+
+% Energy Balance Equations
+U.AddCon('h1*m1 - h2*(m2+m3+m5) = 0'); %HP Header
+
+% General Bounds (helps optimizer)
+U.AddBound('0 <= m <= 150');
+U.AddBound('100 <= h <= 3500');
+
+% Fired Boiler
+fuel  = {'Methane', 1}; % Assume 100% Methane
+fuelT = -20;        % Fuel Temperature [C]
+airT  = 30;         % Air Temerature [C]
+airP  = 1.01325;    % Air Pressure [bar]
+airRelHum = 0.75;   % Air Relative Humidity [fraction]
+rangeM = [5 50];    % Operating mass flow rate range of the boiler [tonne/hr]
+stackT = 200;       % Stack Temperature [C]
+bfwH  = 350;        % Boiler Feed Water Enthalpy [kJ/kg]
+stmT  = 410;        % Steam Temperature [C]
+stmP  = 42;         % Steam Pressure [bar]
+stmH  = JSteamMEX('HPT',stmP,stmT); % Steam Enthalpy [kJ/kg]
+bdr   = 0.01;       % Blowdown Ratio [fraction]
+exO2  = 0.1;        % Inlet excess O2 mole fraction for complete combustion
+U.AddBlrFrd({'BLR1','m1','m4','h1','bblr1'},fuel,rangeM,fuelT,airT,airP,airRelHum,stackT,bfwH,stmT,stmP,bdr,exO2);
+
+% Turbo Generator
+outP = 11;          % Output pressure [bar]
+maxQ = 1000;        % Maximum output power [kW]
+U.AddTurboGen({'TG1','m2','h2','btg1'},stmP,outP,maxQ,stmH);
+
+% Back Pressure Turbine
+power = 500;        % Output power [kW]
+eff   = 0.8;        % Isentropic efficiency [fraction]
+U.AddBPT({'BT1','m3','h2','bt1'},stmP,outP,power,eff,stmH);
+
+% Steam Header
+U.AddHeader({'HP','h2','m5'},stmH);
+
+% Costs
+U.AddConstant('Cost_FG',300);
+U.AddConstant('Cost_BElec',0.27,'Cost_SElec',0.2);
+
+% Power Balance
+U.AddExpression('PWR = TG1_Q - BT1RQ*(1-bt1)');
+U.AddPwrBal({'PWR','bp'},60e3);
+% Objective
+U.AddObj('Cost_FG*(BLR1_FuelM) - (Cost_SElec*(1-bp) + Cost_BElec*bp)*PWR');
+
+% Build Optimization Model
+Build(U)
+
+% Inspect variables (and order)
+U.vars
+
+% Generate Initial Guess & Solve
+x0 = zeros(10,1);
+[x,f,e,i] = Solve(U,x0);
+
+Results(U)
+
+%% Repeat with higher fuel cost
+clc
+
+% Increase fuel cost
+U.AddConstant('Cost_FG',320);
+
+% Build Optimization Model
+Build(U)
+
+% Solve and print results
+[x,f,e,i] = Solve(U,x0);
+Results(U)
+
+%% Repeat with higher electricity sell price
+clc
+
+% Return fuel price to default, increase electricity sell price
+U.AddConstant('Cost_FG',300);
+U.AddConstant('Cost_SElec',0.4);
+
+% Build Optimization Model
+Build(U)
+
+% Solve and print results
+[x,f,e,i] = Solve(U,x0);
+Results(U)
