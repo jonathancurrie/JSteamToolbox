@@ -2,7 +2,7 @@ function [A,B,maxM,maxEff,Qfnc,Hfnc,Efffnc] = SteamTurbineReg(maxQ,inP,inH,outP)
 % STEAMTURBINEREG  Regression Based Steam Turbine Calculation
 % Follows Mavromatis Conceptual Optimisation of Utility Networks I
 %
-% [maxM,A,B,maxEff] = SteamTurbineReg(maxQ,inP,inH,outP)
+% [A,B,maxM,maxEff,Qfnc,Hfnc,Efffnc] = SteamTurbineReg(maxQ,inP,inH,outP)
 %
 %   with maxQ in kW, inP/outP in bar, inH in kJ/kg and maxM in kg/s
 %

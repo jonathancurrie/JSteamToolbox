@@ -1,7 +1,7 @@
 classdef SymUtility < SymBuilder
 %SYMUTILITY  Create a SYMUTILITY object for creating symbolic utility system optimization problems
 %
-%   Copyright (C) 2013 Jonathan Currie (www.i2c2.aut.ac.nz)
+%   Copyright (C) 2023 Jonathan Currie (www.controlengineering.co.nz)
 
     methods
         
